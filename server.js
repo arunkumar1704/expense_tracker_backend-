@@ -52,7 +52,7 @@ server.use('/api', UserRouter);
 server.use('/api/expense', ExpenseRouter);
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
-server.get('/health', (req, res) => {
+server.get('/', (req, res) => {
   res.json({
     success: true,
     message: '🟢 Expense Tracker Server is running',
