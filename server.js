@@ -18,25 +18,35 @@ const server = express();
 const PORT = process.env.PORT || 2001;
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
-// ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174']
-const allowedOrigins = process.env.ORIGIN?.split(',') || [];
+const allowedOrigins =
+  process.env.ORIGIN?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean) || [];
+const isAllowedVercelPreview = (origin) =>
+  /^https:\/\/expense-tracker-frontend-[a-z0-9-]+\.vercel\.app$/.test(origin);
+
 console.log('Allowed Origins:', allowedOrigins);
-server.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (
-        allowedOrigins.includes(origin) ||
-        /^https?:\/\/localhost:\d+$/.test(origin) ||
-        /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin)
-      ) {
-        return callback(null, true);
-      }
-      callback(new Error('CORS policy: origin not allowed'));
-    },
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      isAllowedVercelPreview(origin) ||
+      /^https?:\/\/localhost:\d+$/.test(origin) ||
+      /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    callback(new Error('CORS policy: origin not allowed'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+};
+
+server.use(cors(corsOptions));
+server.options('*', cors(corsOptions));
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
